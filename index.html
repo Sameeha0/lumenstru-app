@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <!-- viewport-fit=cover: the app fills the whole iPhone screen; #app keeps clear of the notch -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>Lumenstru</title>
+  <meta name="description" content="A study planner that works with your cycle.">
+
+  <!-- Added to the Home Screen it opens full screen, like an app -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Lumenstru">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#FBF9F6">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+      background: #FBF9F6;
+      overscroll-behavior: none;
+      /* iPhone Safari: the page itself never pans or zooms, so every swipe
+         goes to the app (which scrolls its own lists) instead of being
+         cancelled for a page bounce. */
+      touch-action: none;
+      position: fixed;
+      width: 100%;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* The app is drawn inside #app, which stays clear of the notch and the home bar. */
+    #app {
+      touch-action: none;
+      position: fixed;
+      top: env(safe-area-inset-top);
+      bottom: env(safe-area-inset-bottom);
+      left: env(safe-area-inset-left);
+      right: env(safe-area-inset-right);
+    }
+    #splash {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      background: #FBF9F6;
+      color: #5A7156;
+      font: 15px Georgia, serif;
+    }
+    #splash img { width: 96px; height: 96px; border-radius: 22px; }
+    #splash .note { color: #2A3229; font: 13px -apple-system, sans-serif; max-width: 280px; text-align: center; display: none; }
+  </style>
+  <script src="lib/jspdf.umd.min.js"></script>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="splash">
+    <img src="icons/icon-192.png" alt="">
+    <div>Lumenstru</div>
+    <div class="note" id="old-browser">This phone's browser is too old for Lumenstru. Please update iOS (16.4 or newer is needed for the Home Screen app, 18.2 or newer to run it).</div>
+  </div>
+  <script>
+    /* Lumenstru needs WebAssembly with garbage collection (Safari 18.2+, Chrome 119+). */
+    var wasmGcOk = (function () {
+      try {
+        return WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 95, 1, 120, 0]));
+      } catch (e) { return false; }
+    })();
+    if (wasmGcOk) {
+      var s = document.createElement('script');
+      s.src = 'lumenstru.js';
+      document.body.appendChild(s);
+    } else {
+      document.getElementById('old-browser').style.display = 'block';
+    }
+    /* iPhone Safari still starts its own page bounce on a swipe; stopping it
+       here leaves the touch with the app. (Taps and typing are not affected.) */
+    document.addEventListener('touchmove', function (e) { e.preventDefault(); }, { passive: false });
+    /* Works offline after the first visit. */
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+  </script>
+</body>
+</html>
